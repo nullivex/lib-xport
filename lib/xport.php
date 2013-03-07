@@ -183,6 +183,8 @@ class Xport {
 
 		//execute the call
 		$result = curl_exec($this->ch);
+		if($result === false)
+			throw new Exception('Xport request failed: '.curl_error($this->ch));
 		$this->log->add('RAW Response: '.base64_encode($result),XportLog::DEBUG);
 
 		//separate out the headers
