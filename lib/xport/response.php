@@ -75,7 +75,11 @@ class XportResponse {
 	public function error(Exception $e){
 		$this->stream->setEncryption(false);
 		$this->stream->setCompression(0);
-		$this->add('error',array('msg'=>trim($e->getMessage()),'code'=>$e->getCode()));
+		$this->add('error',array(
+			 'msg'	=>	trim($e->getMessage())
+			,'code'	=>	$e->getCode()
+			,'trace'=>	$e->getTrace()
+		));
 		$this->output();
 	}
 
