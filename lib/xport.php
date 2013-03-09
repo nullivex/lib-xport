@@ -1,22 +1,15 @@
 <?php
-lib('xport_log','xport_stream');
+lib('xport_common','xport_log','xport_stream');
 
-class Xport {
+class Xport extends XportCommon {
 
 	//call flags
 	const CALL_NOEXEC = 1;
-
-	//encoders
-	const ENC_RAW = 0x00;
-	const ENC_SERIALIZE = 0x01;
-	const ENC_XML = 0x02;
-	const ENC_JSON = 0x03;
 
 	//env
 	protected $http_scheme = 'http://';
 	protected $http_host = 'localhost';
 	protected $http_port = 8080;
-	protected $encoding = self::ENC_RAW;
 
 	//resources
 	public $ch = null;
@@ -40,7 +33,9 @@ class Xport {
 		,$log_level=XportLog::INFO
 	){
 		//setup stream handler
-		$this->stream = XportStream::_get()->setCompression(6)->setEncryption(true);
+		$this->stream = XportStream::_get();
+		$this->stream->setCompression(XportStream::COMPRESS_GZIP);
+		$this->stream->setEncryption(XportStream::CRYPT_LSS);
 		//set environment
 		$this->setHTTPHost($http_host);
 		$this->setHTTPPort($http_port);
@@ -71,11 +66,6 @@ class Xport {
 		return $this;
 	}
 
-	public function setEncoding($encoding){
-		$this->encoding = $encoding;
-		return $this;
-	}
-
 	//-----------------------------------------------------
 	//Environment Getters
 	//-----------------------------------------------------
@@ -85,10 +75,6 @@ class Xport {
 
 	public function getHTTPPort(){
 		return $this->http_port;
-	}
-
-	public function getEncoding(){
-		return $this->encoding;
 	}
 
 	//-----------------------------------------------------
@@ -125,50 +111,6 @@ class Xport {
 			,$http_port
 			,$uri
 		);
-	}
-
-	protected function encode($cmd){
-		switch($this->encoding){
-			default:
-			case self::ENC_RAW:
-				//void
-				break;
-			case self::ENC_SERIALIZE:
-				$cmd = serialize($cmd);
-				break;
-			case self::ENC_XML:
-				lib('array2xml');
-				$cmd = Array2XML::createXML($cmd)->saveXML();
-				break;
-			case self::ENC_JSON:
-				$cmd = json_encode($cmd);
-				break;
-		}
-		//add encoding type
-		$cmd = chr($this->encoding).$cmd;
-		return $cmd;
-	}
-
-	protected function decode(&$response){
-		$encoding = ord(substr($response,0,1));
-		$response = substr($response,1);
-		switch($encoding){
-			default:
-			case self::ENC_RAW:
-				//void
-				break;
-			case self::ENC_SERIALIZE:
-				$response = unserialize($response);
-				break;
-			case self::ENC_XML:
-				lib('array2xml');
-				$response = XML2Array::createArray($response);
-				break;
-			case self::ENC_JSON:
-				$response = json_decode($cmd);
-				break;
-		}
-		return $encoding;
 	}
 
 	//-----------------------------------------------------
@@ -224,7 +166,7 @@ class Xport {
 		$response = $response['response'];
 
 		//decode return payload
-		$response = XportStream::receive($response);
+		$response = XportStream::receive($response)->decode();
 		$this->log->add('Response Raw ('.strlen($response).'): '.substr($response,0,50).'...',XportLog::DEBUG);
 
 		//decode the response
