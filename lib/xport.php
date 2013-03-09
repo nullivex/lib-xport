@@ -142,13 +142,13 @@ class Xport extends XportCommon {
 		curl_setopt($this->ch,CURLOPT_URL,$url);
 
 		//add the payload to the stream
-		$this->stream->addPayload($request);
+		$this->stream->setPayload($request);
 
 		//setup curl post
 		curl_setopt(
 			 $this->ch
 			,CURLOPT_POSTFIELDS
-			,http_build_query(array('request'=>$this->stream->encode(),'data'=>$data)))
+			,http_build_query(array('request'=>$this->stream->encode(),'data'=>$data))
 		);
 
 		//if noexec is passed we simple pass the prepared curl handle back
@@ -160,8 +160,7 @@ class Xport extends XportCommon {
 			throw new Exception('Call failed to '.$url.' '.curl_error($this->ch));
 
 		//separate channels
-		if(!parse_str($result,$response))
-			throw new Exception('Failed to parse result: '.substr($result,0,50));
+		parse_str($result,$response); unset($result);
 		$data = $response['data'];
 		$response = $response['response'];
 
@@ -170,17 +169,18 @@ class Xport extends XportCommon {
 		$this->log->add('Response Raw ('.strlen($response).'): '.substr($response,0,50).'...',XportLog::DEBUG);
 
 		//decode the response
-		$encoding = $this->decode($result);
+		$encoding = $this->decode($response);
 
 		//log response
 		if($encoding != self::ENC_RAW){
-			$this->log->add('Response received: '.print_r($result,true));
+			// $response = array_shift($response);
+			$this->log->add('Response received: '.print_r($response,true));
 			//pass to error handler
-			$this->errorHandler($result);
+			$this->errorHandler($response);
 		}
 
 		//if we got here there were no errors
-		return $result;
+		return $response;
 	}
 
 }
