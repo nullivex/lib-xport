@@ -10,6 +10,15 @@ abstract class XportCommon {
 
 	protected $encoding = self::ENC_RAW;
 
+	//This basically turns the output into something human readable
+	//	good for debugging, bad for security, size, flexibility
+	public function humanize(){
+		$this->stream->setCompression(XportStream::COMPRESS_OFF);
+		$this->stream->setEncryption(XportStream::CRYPT_OFF);
+		$this->setEncoding(XportCommon::ENC_XML);
+		return $this;
+	}
+
 	public function setEncoding($encoding){
 		$this->encoding = $encoding;
 		return $this;
