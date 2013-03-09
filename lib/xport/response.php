@@ -6,6 +6,9 @@ lib('xport_common','xport_stream');
 //	Used to properly respond to the client SDK
 class XportResponse extends XportCommon {
 
+	//yes this is a singleton by design
+	static $inst = false;
+
 	//resources
 	public $stream = null;
 	public $log = null;
@@ -19,9 +22,12 @@ class XportResponse extends XportCommon {
 	protected $request_data = null;
 
 	public static function _get(){
-		if(is_null(post('request')))
-			throw new Exception('No request present');
-		return new self(post('request'),post('data'));
+		if(!self::$inst){
+			if(is_null(post('request')))
+				throw new Exception('No request present');
+			self::$inst = new self(post('request'),post('data'));
+		}
+		return self::$inst;
 	}
 
 	public function __construct($request,$data){
