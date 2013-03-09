@@ -28,14 +28,16 @@ class XportResponse extends XportCommon {
 	}
 
 	public function __construct($request,$data){
+		//dolog('request: '.print_r($request,true));
 		//start stream handler
 		$this->stream = XportStream::receive($request);
 		//store request
 		$this->request = $this->stream->decode();
+		// dolog('request: '.print_r($this->request,true));
 		//store data
 		$this->request_data = $data;
 		//start logging
-		$this->log = XportLog::_get()->setLabel('Xport-Resp');
+		$this->log = XportLog::_get()->setLevel(XportLog::INFO)->setLabel('Xport-Resp');
 	}
 
 	//-----------------------------------------------------
@@ -44,6 +46,7 @@ class XportResponse extends XportCommon {
 	public function process(){
 		$this->log->add('Request Received from: '.server('REMOTE_ADDR'));
 		$encoding = $this->decode($this->request);
+		// dolog('request: '.print_r($this->request,true));
 		if($encoding != self::ENC_RAW)
 			$this->log->add('Parsed Request: '.print_r($this->request,true));
 		return $this;
@@ -117,11 +120,10 @@ class XportResponse extends XportCommon {
 	//-----------------------------------------------------
 	protected function output(){
 		//encode the command stream
-		$this->stream->setPayload($this->encode($this->cmd));
+		$this->log->add('Response CMD: '.print_r($this->cmd,true));
+		$this->stream->setPayload($this->encode($this->cmd,'response'));
 		$rv = array('response'=>$this->stream->encode(),'data'=>$this->data);
-		if($build_query)
-			return http_build_query($rv);
-		return $rv;
+		return http_build_query($rv);
 	}
 
 	//this is a shortcut to send success to the other end
