@@ -1,5 +1,5 @@
 <?php
-lib('xport_common','xport_stream');
+lib('xport_common','xport_stream','xport_log');
 
 //This is the server response SDK
 //	Handles the request and sets up the context
@@ -15,18 +15,15 @@ class XportResponse extends XportCommon {
 
 	//response
 	protected $cmd = array();
-	protected $data = false;
+	protected $data = ''; //on purpose or it wont output properly
 
 	//request
 	protected $request = null;
 	protected $request_data = null;
 
 	public static function _get(){
-		if(!self::$inst){
-			if(is_null(post('request')))
-				throw new Exception('No request present');
+		if(!self::$inst)
 			self::$inst = new self(post('request'),post('data'));
-		}
 		return self::$inst;
 	}
 
@@ -38,7 +35,7 @@ class XportResponse extends XportCommon {
 		//store data
 		$this->request_data = $data;
 		//start logging
-		$this->log = XportLog::_get()->setLevel($log_level)->setLabel('VC-SDK-REQ');
+		$this->log = XportLog::_get()->setLabel('Xport-Resp');
 	}
 
 	//-----------------------------------------------------
@@ -65,7 +62,7 @@ class XportResponse extends XportCommon {
 	//-----------------------------------------------------
 	//Request getters
 	//-----------------------------------------------------
-	public function get($key=false) return $this->getRequest($key);
+	public function get($key=false){return $this->getRequest($key);}
 
 	public function getRequest($key=false){
 		if($key === false){
@@ -85,7 +82,7 @@ class XportResponse extends XportCommon {
 	//-----------------------------------------------------
 	//Output Builders
 	//-----------------------------------------------------
-	public function add($name,$value=null) return $this->addResponseCMD($name,$value);
+	public function add($name,$value=null){return $this->addResponseCMD($name,$value);}
 
 	public function addResponseCMD($name,$value=null){
 		$this->cmd[$name] = $value;
@@ -120,7 +117,7 @@ class XportResponse extends XportCommon {
 	//-----------------------------------------------------
 	public function output(){
 		//encode the command stream
-		$this->stream->addPayload($this->encode($this->cmd));
+		$this->stream->setPayload($this->encode($this->cmd));
 		return array($this->stream->encode(),$this->data);
 	}
 
