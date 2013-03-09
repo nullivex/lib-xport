@@ -17,12 +17,21 @@ class XportStream {
 	protected $func_compress = 'gzdeflate';
 	protected $func_decompress = 'gzinflate';
 
-	public function _get(){
-		return new self(Config::get('crypt','key'),Config::get('crypt','iv'));
+	protected $payload = null;
+	protected $size = null;
+
+	public function _get($payload){
+		return new self($payload,Config::get('crypt','key'),Config::get('crypt','iv'));
 	}
 
-	public function __construct($crypt_key,$crypt_iv){
+	public function __construct($payload,$crypt_key,$crypt_iv){
+		$this->setPayload($payload);
 		$this->crypt = Crypt::_get($crypt_key,$crypt_iv);
+	}
+
+	protected function setPayload($payload){
+		$this->size = strlen($data);
+		$this->payload = $payload;
 	}
 
 	//-----------------------------------------------------
@@ -85,27 +94,59 @@ class XportStream {
 		return $this;
 	}
 
+	//--------------------------------------------------------
+	//Internal Handlers
+	//--------------------------------------------------------
+	protected function chksumCreate(){
+		$this->md5 = md5($this->payload);
+		$this->sha1 = sha1($this->payload);
+	}
+
+	protected function chksumVerify(){
+		$md5 = md5($this->payload);
+		$sha1 = sha1($this->payload);
+		if($sha1 !== $this->sha1)
+			throw new Exception('Payload hash check (sha1) failed');
+		if($md5 !== $this->md5)
+			throw new Exception('Payload hash check (md5) failed');
+	}
+
+	protected function pad(){
+		$block_size = $this->crypt->getBlockSize();
+		$this->payload = str_pad($this->payload,$block_size,"\0",STR_PAD_RIGHT);
+	}
+
+	protected function unpad(){
+		$this->payload = substr($this->payload,0,$this->size);
+	}
+
 	//-----------------------------------------------------
-	//Util Functions
+	//Process Functions
 	//-----------------------------------------------------
-	public function compress($data){
-		if($this->compress === false) return $data;
-		return call_user_func($this->func_compress,$data,$this->compress);
+	public function encode(){
+		$this->chksumCreate();
+		if($this->encrypt !== false){
+			$this->pad();
+			$this->payload = $this->crypt->encrypt($this->payload);
+		}
+		if($this->compress !== false)
+			$this->payload = call_user_func_array($this->func_compress,$this->payload);
+		return $this;
 	}
 
-	public function decompress($data){
-		if($this->compress === false) return $data;
-		return call_user_func($this->func_decompress,$data);
+	public function decode(){
+		if($this->compress !== false)
+			$this->payload = call_user_func_array($this->func_decompress,$this->payload);
+		if($this->encrypt !== false){
+			$this->payload = $this->crypt->decrypt($this->payload);
+			$this->unpad();
+		}
+		$this->chksumVerify();
+		return $this;
 	}
 
-	public function encrypt($data){
-		if($this->encrypt === false) return $data;
-		return $this->crypt->encrypt($data,false);
-	}
-
-	public function decrypt($data){
-		if($this->encrypt === false) return $data;
-		return $this->crypt->decrypt($data,false);
+	public function get(){
+		return $this->payload;
 	}
 
 	public function headers(){
