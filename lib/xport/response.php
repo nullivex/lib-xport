@@ -11,43 +11,28 @@ class XportResponse extends XportCommon {
 	public $log = null;
 
 	//response
-	public $cmd = array();
-	public $data = false;
+	protected $cmd = array();
+	protected $data = false;
 
 	//request
-	public $request = null;
+	protected $request = null;
+	protected $request_data = null;
 
-	public static function _get($log_level=XportLog::INFO){
+	public static function _get(){
 		if(is_null(post('request')))
 			throw new Exception('No request present');
-		return new self(post('request'),$log_level);
+		return new self(post('request'),post('data'));
 	}
 
-	public function __construct($request,$log_level=XportLog::INFO){
+	public function __construct($request,$data){
 		//start stream handler
 		$this->stream = XportStream::receive($request);
 		//store request
 		$this->request = $this->stream->decode();
+		//store data
+		$this->request_data = $data;
 		//start logging
 		$this->log = XportLog::_get()->setLevel($log_level)->setLabel('VC-SDK-REQ');
-	}
-
-	public function auth(){
-		if(is_null(Config::get('xport','auth_key')))
-			throw new Exception('Cannot auth request, no auth key defined');
-		if(!isset($this->request['xport_auth_key']))
-			throw new Exception('No auth key present for authenticated request');
-		if($this->request['xport_auth_key'] != Config::get('xport','auth_key'))
-			throw new Exception('Invalid auth key passed with request');
-		return $this;
-	}
-
-	public function get(){
-		//remove api key from request
-		$request = $this->request;
-		unset($request['xport_auth_key']);
-		//send back
-		return $request;
 	}
 
 	//-----------------------------------------------------
@@ -61,24 +46,66 @@ class XportResponse extends XportCommon {
 		return $this;
 	}
 
+	public function auth(){
+		if(is_null(Config::get('xport','auth_key')))
+			throw new Exception('Cannot auth request, no auth key defined');
+		if(!isset($this->request['xport_auth_key']))
+			throw new Exception('No auth key present for authenticated request');
+		if($this->request['xport_auth_key'] != Config::get('xport','auth_key'))
+			throw new Exception('Invalid auth key passed with request');
+		return $this;
+	}
+
+	//-----------------------------------------------------
+	//Request getters
+	//-----------------------------------------------------
+	public function get($key=false) return $this->getRequest($key);
+
+	public function getRequest($key=false){
+		if($key === false){
+			//remove api key from request
+			$request = $this->request;
+			unset($request['xport_auth_key']);
+			//send back
+			return $request;
+		}
+		return mda_get($this->request,$key);
+	}
+
+	public function getRequestData(){
+		return $this->request_data;
+	}
+
 	//-----------------------------------------------------
 	//Output Builders
 	//-----------------------------------------------------
-	public function add($name,$value){
+	public function add($name,$value=null) return $this->addResponseCMD($name,$value);
+
+	public function addResponseCMD($name,$value=null){
 		$this->cmd[$name] = $value;
 		return $this;
 	}
 
-	public function getCMD(){
+	public function setResponseCMD($val){
+		$this->cmd = $val;
+		return $this;
+	}
+
+	public function getResponseCMD(){
 		return $this->cmd;
 	}
 
-	public function setData($data){
+	public function addResponseData($data){
+		$this->data .= $data;
+		return $this;
+	}
+
+	public function setResponseData($data){
 		$this->data = $data;
 		return $this;
 	}
 
-	public function getData(){
+	public function getResponseData(){
 		return $this->data;
 	}
 
@@ -98,8 +125,7 @@ class XportResponse extends XportCommon {
 	}
 
 	public function error(Exception $e){
-		$this->stream->setCompression(XportStream::COMPRESS_OFF);
-		$this->stream->setEncryption(XportStream::CRYPT_OFF);
+		$this->humanize();
 		$this->add('error',array(
 			 'msg'	=>	trim($e->getMessage())
 			,'code'	=>	$e->getCode()
