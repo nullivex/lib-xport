@@ -25,8 +25,7 @@ class XportStream {
 
 	public static function receive($payload){
 		$stream = self::_get();
-		$stream->setPayload($payload);
-		$stream->setup();
+		$stream->setup($payload);
 		return $stream;
 	}
 
@@ -81,16 +80,20 @@ class XportStream {
 	protected function decompress(){
 		switch($this->compress){
 			case self::COMPRESS_GZIP:
+				dolog('using gzip');
 				$this->payload = gzinflate($this->payload);
 				break;
 			case self::COMPRESS_BZIP:
+				dolog('using bzip');
 				$this->payload = bzdecompress($this->payload);
 				break;
 			case self::COMPRESS_LZF:
+				dolog('using lzf');
 				$this->payload = lzf_decompress($this->payload);
 				break;
 			case self::COMPRESS_OFF:
 			default:
+				dolog('using none');
 				//anything but known values result in OFF
 				break;
 		}
@@ -100,7 +103,7 @@ class XportStream {
 	protected function encrypt(){
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
-				$size = pack('n',$this->size);
+				$size = pack('N',$this->size);
 				$this->payload = $this->crypt->encrypt($size.$this->payload);
 				break;
 			case self::CRYPT_OFF:
@@ -115,8 +118,8 @@ class XportStream {
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
 				$this->payload = $this->crypt->decrypt($this->payload);
-				$this->size = array_shift(unpack('n',substr($this->payload,0,2)));
-				$this->payload = substr($this->payload,2,$this->size);
+				$this->size = array_shift(unpack('N',substr($this->payload,0,4)));
+				$this->payload = substr($this->payload,4,$this->size);
 				break;
 			case self::CRYPT_OFF:
 			default:
@@ -126,11 +129,11 @@ class XportStream {
 		return true;
 	}
 
-	protected function setup(){
-		$set = ord(substr($this->payload,0,1));
-		$this->payload = substr($this->payload,1);
+	protected function setup($payload){
+		$set = ord(substr($payload,0,1));
+		$this->payload = substr($payload,1);
 		$this->encrypt = $set >> 4;
-		$this->compress = $set & 0xf0;
+		$this->compress = $set & 0x0f;
 	}
 
 	protected function finalize(){
@@ -149,7 +152,6 @@ class XportStream {
 	}
 
 	public function decode(){
-		$this->setup();
 		$this->decompress();
 		$this->decrypt();
 		return $this->payload;
