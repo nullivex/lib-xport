@@ -28,7 +28,7 @@ abstract class XportCommon {
 		return $this->encoding;
 	}
 
-	protected function encode($cmd){
+	protected function encode($cmd,$root='request'){
 		switch($this->encoding){
 			default:
 			case self::ENC_RAW:
@@ -40,7 +40,7 @@ abstract class XportCommon {
 			case self::ENC_XML:
 				lib('array2xml');
 				try {
-					$cmd = Array2XML::createXML('request',$cmd)->saveXML();
+					$cmd = Array2XML::createXML($root,$cmd)->saveXML();
 				} catch(Exception $e){
 					throw new Exception('Could not encode XML: '.print_r($cmd));
 				}
@@ -55,7 +55,7 @@ abstract class XportCommon {
 	}
 
 	protected function decode(&$response){
-		$encoding = ord(substr($response,0,1));
+		$this->encoding = $encoding = ord(substr($response,0,1));
 		$response = substr($response,1);
 		switch($encoding){
 			default:
@@ -68,7 +68,7 @@ abstract class XportCommon {
 			case self::ENC_XML:
 				lib('array2xml');
 				try {
-					$response = XML2Array::createArray($response);
+					$response = array_shift(XML2Array::createArray($response));
 				} catch(Exception $e){
 					throw new Exception('Response is not valid XML: '.$response);
 				}
