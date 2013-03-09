@@ -1,90 +1,116 @@
 <?php
-lib('array2xml','xport_stream');
+lib('xport_common','xport_stream');
 
 //This is the server response SDK
+//	Handles the request and sets up the context
 //	Used to properly respond to the client SDK
-//	Does not offer any other extended functionality
-class XportResponse {
-
-	//env
-	public $params = array();
-	public $raw = false;
+class XportResponse extends XportCommon {
 
 	//resources
-	public $tstream = null;
+	public $stream = null;
+	public $log = null;
 
-	public static function _get(){
-		return new static();
+	//response
+	public $cmd = array();
+	public $data = false;
+
+	//request
+	public $request = null;
+
+	public static function _get($log_level=XportLog::INFO){
+		if(is_null(post('request')))
+			throw new Exception('No request present');
+		return new self(post('request'),$log_level);
 	}
 
-	public function __construct(){
+	public function __construct($request,$log_level=XportLog::INFO){
 		//start stream handler
-		$this->stream = XportStream::_get()->setCompression(6)->setEncryption(true);
+		$this->stream = XportStream::receive($request);
+		//store request
+		$this->request = $this->stream->decode();
+		//start logging
+		$this->log = XportLog::_get()->setLevel($log_level)->setLabel('VC-SDK-REQ');
+	}
+
+	public function auth(){
+		if(is_null(Config::get('xport','auth_key')))
+			throw new Exception('Cannot auth request, no auth key defined');
+		if(!isset($this->request['xport_auth_key']))
+			throw new Exception('No auth key present for authenticated request');
+		if($this->request['xport_auth_key'] != Config::get('xport','auth_key'))
+			throw new Exception('Invalid auth key passed with request');
+		return $this;
+	}
+
+	public function get(){
+		//remove api key from request
+		$request = $this->request;
+		unset($request['xport_auth_key']);
+		//send back
+		return $request;
+	}
+
+	//-----------------------------------------------------
+	//Transport Handler
+	//-----------------------------------------------------
+	public function process(){
+		$this->log->add('Request Received from: '.server('REMOTE_ADDR'));
+		$encoding = $this->decode($this->request);
+		if($encoding != self::ENC_RAW)
+			$this->log->add('Parsed Request: '.print_r($this->request,true));
+		return $this;
 	}
 
 	//-----------------------------------------------------
 	//Output Builders
 	//-----------------------------------------------------
 	public function add($name,$value){
-		$this->params[$name] = $value;
+		$this->cmd[$name] = $value;
+		return $this;
 	}
 
-	public function addRaw($data){
-		$this->raw = $data;
+	public function getCMD(){
+		return $this->cmd;
 	}
 
-	//-----------------------------------------------------
-	//Helpers
-	//-----------------------------------------------------
-	public function headers(){
-		$headers = array();
-		//set content type
-		if($this->raw === false)
-			$headers[] = 'Content-Type: text/xml';
-		else
-			$headers[] = 'Content-Type: raw';
-		return $headers;
+	public function setData($data){
+		$this->data = $data;
+		return $this;
+	}
+
+	public function getData(){
+		return $this->data;
 	}
 
 	//-----------------------------------------------------
 	//Response Transport
 	//-----------------------------------------------------
-	public function output($echo=true){
-		if($this->raw === false)
-			$response = Array2XML::createXML('response',$this->params)->saveXML();
-		else
-			$response = $this->raw;
-		$response = $this->stream->encrypt($response);
-		$response = $this->stream->compress($response);
-		if($echo = false) return $response;
-		//set proper output headers
-		$headers = array_merge($this->stream->headers(),$this->headers());
-		foreach($headers as $header)
-			header($header);
-		//send response
-		echo $response;
-		exit;
+	public function output(){
+		//encode the command stream
+		$this->stream->addPayload($this->encode($this->cmd));
+		return array($this->stream->encode(),$this->data);
 	}
 
 	//this is a shortcut to send success to the other end
 	public function success(){
 		$this->add('success',array('msg'=>'Request processed successfully','code'=>0));
-		$this->output();
+		return $this;
 	}
 
 	public function error(Exception $e){
-		$this->stream->setEncryption(false);
-		$this->stream->setCompression(0);
+		$this->stream->setCompression(XportStream::COMPRESS_OFF);
+		$this->stream->setEncryption(XportStream::CRYPT_OFF);
 		$this->add('error',array(
 			 'msg'	=>	trim($e->getMessage())
 			,'code'	=>	$e->getCode()
-			,'trace'=>	$e->getTrace()
+			,'trace'=>	base64_encode(serialize($e->getTrace()))
 		));
-		$this->output();
+		return $this;
 	}
 
 	public function __toString(){
-		return $this->output(false);
+		list($response,$data) = $this->output(false);
+		return http_build_query(array('response'=>$response,'data'=>$data));
 	}
 
 }
