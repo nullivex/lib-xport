@@ -40,7 +40,7 @@ abstract class XportCommon {
 			case self::ENC_XML:
 				lib('array2xml');
 				try {
-					$cmd = Array2XML::createXML($cmd)->saveXML();
+					$cmd = Array2XML::createXML('request',$cmd)->saveXML();
 				} catch(Exception $e){
 					throw new Exception('Could not encode XML: '.print_r($cmd));
 				}
