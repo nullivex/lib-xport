@@ -38,8 +38,8 @@ class XportStream {
 		$this->crypt = Crypt::_get($crypt_key,$crypt_iv);
 	}
 
-	protected function setPayload($payload){
-		$this->size = strlen($data);
+	public function setPayload($payload){
+		$this->size = strlen($payload);
 		$this->payload = $payload;
 	}
 
@@ -154,7 +154,7 @@ class XportStream {
 		$this->setup();
 		$this->decompress();
 		$this->decrypt();
-		return $this->payload();
+		return $this->payload;
 	}
 
 	public function get(){
