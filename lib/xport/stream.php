@@ -26,7 +26,8 @@ class XportStream {
 	public static function receive($payload){
 		$stream = self::_get();
 		$stream->setPayload($payload);
-		return $stream->decode();
+		$stream->setup();
+		return $stream;
 	}
 
 	public static function _get(){
