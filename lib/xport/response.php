@@ -115,10 +115,13 @@ class XportResponse extends XportCommon {
 	//-----------------------------------------------------
 	//Response Transport
 	//-----------------------------------------------------
-	public function output(){
+	protected function output(){
 		//encode the command stream
 		$this->stream->setPayload($this->encode($this->cmd));
-		return array($this->stream->encode(),$this->data);
+		$rv = array('response'=>$this->stream->encode(),'data'=>$this->data);
+		if($build_query)
+			return http_build_query($rv);
+		return $rv;
 	}
 
 	//this is a shortcut to send success to the other end
@@ -138,8 +141,7 @@ class XportResponse extends XportCommon {
 	}
 
 	public function __toString(){
-		list($response,$data) = $this->output(false);
-		return http_build_query(array('response'=>$response,'data'=>$data));
+		return $this->output();
 	}
 
 }
