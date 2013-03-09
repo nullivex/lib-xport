@@ -100,7 +100,7 @@ class XportStream {
 	protected function encrypt(){
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
-				$size = pack('NN',($this->size & 0xffffffff00000000) >> 32,($this->size & 0x00000000ffffffff)); 
+				$size = pack('n',$this->size);
 				$this->payload = $this->crypt->encrypt($size.$this->payload);
 				break;
 			case self::CRYPT_OFF:
@@ -115,10 +115,8 @@ class XportStream {
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
 				$this->payload = $this->crypt->decrypt($this->payload);
-				$s = unpack('NN',substr($this->payload,0,8));
-				$this->size = ($s[1] << 32) | $s[2];
-				unset($s);
-				$this->payload = substr($this->payload,8,$this->size);
+				$this->size = array_shift(unpack('n',substr($this->payload,0,2)));
+				$this->payload = substr($this->payload,2,$this->size);
 				break;
 			case self::CRYPT_OFF:
 			default:
