@@ -51,7 +51,7 @@ class XportStream {
 	}
 
 	public function setCompression($flag=false){
-		$this->compress = false;
+		$this->compress = $flag;
 		return $this;
 	}
 
@@ -59,7 +59,6 @@ class XportStream {
 	//Process Functions
 	//-----------------------------------------------------
 	protected function compress(){
-		if($this->compress === self::COMPRESS_OFF) return true;
 		switch($this->compress){
 			case self::COMPRESS_GZIP:
 				$this->payload = gzdeflate($this->payload);
@@ -70,13 +69,15 @@ class XportStream {
 			case self::COMPRESS_LZF:
 				$this->payload = lzf_compress($this->payload);
 				break;
+			case self::COMPRESS_OFF:
 			default:
-				return true;
+				//anything but known values result in OFF
+				break;
 		}
+		return true;
 	}
 
 	protected function decompress(){
-		if($this->compress === self::COMPRESS_OFF) return true;
 		switch($this->compress){
 			case self::COMPRESS_GZIP:
 				$this->payload = gzinflate($this->payload);
@@ -87,37 +88,38 @@ class XportStream {
 			case self::COMPRESS_LZF:
 				$this->payload = lzf_decompress($this->payload);
 				break;
+			case self::COMPRESS_OFF:
 			default:
-				//void
+				//anything but known values result in OFF
 				break;
 		}
 		return true;
 	}
 
 	protected function encrypt(){
-		if($this->encrypt === self::CRYPT_OFF) return true;
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
 				$size = strpad($this->size,10,0,STR_PAD_LEFT);
 				$this->payload = $this->crypt->encrypt($size.$this->payload);
 				break;
+			case self::CRYPT_OFF:
 			default:
-				//void
+				//anything but known values result in OFF
 				break;
 		}
 		return true;
 	}
 
 	protected function decrypt(){
-		if($this->encrypt === self::CRYPT_OFF) return true;
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
 				$this->payload = $this->crypt->decrypt($this->payload);
 				$size = substr($this->payload,0,10);
-				$this->payload = substr($this->payload,10,$size);
+				$this->payload = substr(strpad($this->payload,$size+10,chr(0)),10,$size);
 				break;
+			case self::CRYPT_OFF:
 			default:
-				//void
+				//anything but known values result in OFF
 				break;
 		}
 		return true;
@@ -131,8 +133,8 @@ class XportStream {
 	}
 
 	protected function finalize(){
-		$set = chr((($this->encrypt << 4) | $this->compress) & 0xff));
-		$this->payload = chr($set).$this->payload;
+		$set = ($this->encrypt << 4) | $this->compress;
+		$this->payload = chr($set & 0xff).$this->payload;
 	}
 
 	//-----------------------------------------------------
