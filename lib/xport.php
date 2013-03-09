@@ -1,15 +1,22 @@
 <?php
-lib('array2xml','xport_log','xport_stream');
+lib('xport_log','xport_stream');
 
 class Xport {
 
 	//call flags
 	const CALL_NOEXEC = 1;
 
+	//encoders
+	const ENC_RAW = 0x00;
+	const ENC_SERIALIZE = 0x01;
+	const ENC_XML = 0x02;
+	const ENC_JSON = 0x03;
+
 	//env
 	protected $http_scheme = 'http://';
 	protected $http_host = 'localhost';
 	protected $http_port = 8080;
+	protected $encoding = self::ENC_RAW;
 
 	//resources
 	public $ch = null;
@@ -64,6 +71,11 @@ class Xport {
 		return $this;
 	}
 
+	public function setEncoding($encoding){
+		$this->encoding = $encoding;
+		return $this;
+	}
+
 	//-----------------------------------------------------
 	//Environment Getters
 	//-----------------------------------------------------
@@ -73,6 +85,10 @@ class Xport {
 
 	public function getHTTPPort(){
 		return $this->http_port;
+	}
+
+	public function getEncoding(){
+		return $this->encoding;
 	}
 
 	//-----------------------------------------------------
@@ -86,25 +102,6 @@ class Xport {
 		return true;
 	}
 
-	protected static function http_parse_headers($header){
-		$retVal = array();
-		$fields = explode("\r\n", preg_replace('/\x0D\x0A[\x09\x20]+/', ' ', $header));
-		foreach( $fields as $field ) {
-			if( preg_match('/([^:]+): (.+)/m', $field, $match) ) {
-				$match[1] = preg_replace('/(?<=^|[\x09\x20\x2D])./e', 'strtoupper("\0")', strtolower(trim($match[1])));
-				if( isset($retVal[$match[1]]) ) {
-					if (!is_array($retVal[$match[1]])) {
-						$retVal[$match[1]] = array($retVal[$match[1]]);
-					}
-					$retVal[$match[1]][] = $match[2];
-				} else {
-					$retVal[$match[1]] = trim($match[2]);
-				}
-			}
-		}
-		return $retVal;
-	}
-
 	private function initCURL(){
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch,array(
@@ -112,7 +109,7 @@ class Xport {
 			,CURLOPT_POST				=>	true
 		));
 	}
-	
+
 	private function makeURL($uri){
 		$http_port = ':'.$this->http_port;
 		if(
@@ -130,28 +127,71 @@ class Xport {
 		);
 	}
 
+	protected function encode($cmd){
+		switch($this->encoding){
+			default:
+			case self::ENC_RAW:
+				//void
+				break;
+			case self::ENC_SERIALIZE:
+				$cmd = serialize($cmd);
+				break;
+			case self::ENC_XML:
+				lib('array2xml');
+				$cmd = Array2XML::createXML($cmd)->saveXML();
+				break;
+			case self::ENC_JSON:
+				$cmd = json_encode($cmd);
+				break;
+		}
+		//add encoding type
+		$cmd = chr($this->encoding).$cmd;
+		return $cmd;
+	}
+
+	protected function decode(&$response){
+		$encoding = ord(substr($response,0,1));
+		$response = substr($response,1);
+		switch($encoding){
+			default:
+			case self::ENC_RAW:
+				//void
+				break;
+			case self::ENC_SERIALIZE:
+				$response = unserialize($response);
+				break;
+			case self::ENC_XML:
+				lib('array2xml');
+				$response = XML2Array::createArray($response);
+				break;
+			case self::ENC_JSON:
+				$response = json_decode($cmd);
+				break;
+		}
+		return $encoding;
+	}
+
 	//-----------------------------------------------------
 	//Transport Layer
 	//-----------------------------------------------------
-	public function call($uri,$params=array(),$flags=array(),$rawpost=array()){
+	public function call($uri,$cmd=array(),&$data=null,$flags=array()){
 		$url = $this->makeURL($uri);
-		//inspect raw params
-		if(!is_array($rawpost))
-			throw new Exception('Raw post data must be an array');
 
 		//inject auth key
 		if(is_null(Config::get('xport','auth_key')))
 			throw new Exception('Cannot make request, no auth key defined');
-		$params['xport_auth_key'] = Config::get('xport','auth_key');
+		$cmd['xport_auth_key'] = Config::get('xport','auth_key');
 
 		//print some info
 		$this->log->add('Setting up call to: '.$url);
-		$this->log->add('Params: '.print_r($params,true));
+		$this->log->add('Command Params: '.print_r($cmd,true));
 		$this->log->add('Flags Present: '.print_r($flags,true),XportLog::DEBUG);
+		if(!is_null($data))
+			$this->log->add('Data present ('.strlen($data).'): '.substr($data,0,50).'...',XportLog::DEBUG);
 
-		//convert params to xml for request
-		$request = Array2XML::createXML('request',$params)->saveXML();
-		$this->log->add('Request XML: '.$request,XportLog::DEBUG);
+		//encode cmd params
+		$request = $this->encode($cmd);
+		$this->log->add('Request Encoded: '.$request,XportLog::DEBUG);
 
 		//start curl if needed
 		if(!$this->ch) $this->initCURL();
@@ -159,68 +199,43 @@ class Xport {
 		//set the url to hit
 		curl_setopt($this->ch,CURLOPT_URL,$url);
 
-		//encrypt
-		$request = $this->stream->encrypt($request);
-
-		//compress
-		$request = $this->stream->compress($request);
+		//add the payload to the stream
+		$this->stream->addPayload($request);
 
 		//setup curl post
 		curl_setopt(
 			 $this->ch
 			,CURLOPT_POSTFIELDS
-			,http_build_query(array_merge($rawpost,array('request'=>$request)))
+			,http_build_query(array('request'=>$this->stream->encode(),'data'=>$data)))
 		);
-
-		//set the proper headers
-		curl_setopt($this->ch,CURLOPT_HTTPHEADER,$this->stream->headers());
 
 		//if noexec is passed we simple pass the prepared curl handle back
 		if(in_array(self::CALL_NOEXEC,$flags)) return $this->ch;
 
-		//if we are going to exec the call lets make sure we get the headers back
-		curl_setopt($this->ch,CURLOPT_HEADER,true);
-
 		//execute the call
 		$result = curl_exec($this->ch);
 		if($result === false)
-			throw new Exception('Xport request failed: '.curl_error($this->ch));
-		$this->log->add('RAW Response: '.base64_encode($result),XportLog::DEBUG);
+			throw new Exception('Call failed to '.$url.' '.curl_error($this->ch));
 
-		//separate out the headers
-		$header_size = curl_getinfo($this->ch,CURLINFO_HEADER_SIZE);
-		$headers = substr($result,0,$header_size);
-		$this->log->add('Response Headers RAW: '.$headers,XportLog::DEBUG);
-		$headers = self::http_parse_headers($headers);
-		$this->log->add('Response Headers PARSED: '.print_r($headers,true),XportLog::DEBUG);
-		$this->stream->setByHeaders($headers);
-		$result = substr($result,$header_size);
+		//separate channels
+		if(!parse_str($result,$response))
+			throw new Exception('Failed to parse result: '.substr($result,0,50));
+		$data = $response['data'];
+		$response = $response['response'];
 
-		//decompress
-		$result = $this->stream->decompress($result);
+		//decode return payload
+		$response = XportStream::receive($response);
+		$this->log->add('Response Raw ('.strlen($response).'): '.substr($response,0,50).'...',XportLog::DEBUG);
 
-		//decrypt
-		$result = $this->stream->decrypt($result);
-
-		//check for raw output and just return
-		if(mda_get($headers,'Content-Type') == 'raw'){
-			$this->log->add('Returning RAW result (size '.strlen($result).')',XportLog::DEBUG);
-			return $result;
-		}
-
-		//parse the result back into an array
-		try {
-			$this->log->add('Translating request to array: '.$result,XportLog::DEBUG);
-			$result = array_shift(XML2Array::createArray($result));
-		} catch(Exception $e){
-			throw new Exception('Result is not valid XML: '. $result);
-		}
+		//decode the response
+		$encoding = $this->decode($result);
 
 		//log response
-		$this->log->add('Request received: '.print_r($result,true));
-
-		//pass to error handler
-		$this->errorHandler($result);
+		if($encoding != self::ENC_RAW){
+			$this->log->add('Response received: '.print_r($result,true));
+			//pass to error handler
+			$this->errorHandler($result);
+		}
 
 		//if we got here there were no errors
 		return $result;
