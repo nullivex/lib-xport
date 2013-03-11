@@ -16,9 +16,6 @@ class Xport extends XportCommon {
 	public $stream = null;
 	public $log = null;
 
-	//debug spool
-	protected $debug = null;
-
 	//static constructor access
 	public static function _get(){
 		$obj = new static();
@@ -78,10 +75,6 @@ class Xport extends XportCommon {
 
 	public function getHTTPPort(){
 		return $this->http_port;
-	}
-
-	public function getDebug(){
-		return $this->debug;
 	}
 
 	//-----------------------------------------------------
@@ -169,7 +162,7 @@ class Xport extends XportCommon {
 		//separate channels
 		parse_str($result,$response); unset($result);
 		if(isset($response['data'])) $data = $response['data'];
-		if(isset($response['debug'])) $this->debug = $response['debug'];
+		if(isset($response['debug']) && trim($response['debug']) != '') debug_dump($response['debug']);
 		if(!isset($response['response']))
 			throw new Exception('No response received with request: '.$response);
 		$response = $response['response'];
