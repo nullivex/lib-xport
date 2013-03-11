@@ -120,9 +120,10 @@ class XportResponse extends XportCommon {
 	//-----------------------------------------------------
 	protected function output(){
 		//encode the command stream
+		$debug = ob_get_contents(); ob_end_clean();
 		$this->log->add('Response CMD: '.print_r($this->cmd,true));
 		$this->stream->setPayload($this->encode($this->cmd,'response'));
-		$rv = array('response'=>$this->stream->encode(),'data'=>$this->data);
+		$rv = array('debug'=>$debug,'response'=>$this->stream->encode(),'data'=>$this->data);
 		return http_build_query($rv);
 	}
 
