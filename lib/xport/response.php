@@ -28,12 +28,10 @@ class XportResponse extends XportCommon {
 	}
 
 	public function __construct($request,$data){
-		//dolog('request: '.print_r($request,true));
 		//start stream handler
 		$this->stream = XportStream::receive($request);
 		//store request
 		$this->request = $this->stream->decode();
-		// dolog('request: '.print_r($this->request,true));
 		//store data
 		$this->request_data = $data;
 		//start logging
