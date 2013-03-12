@@ -1,5 +1,5 @@
 <?php
-lib('crypt');
+lib('xport_crypt');
 
 class XportStream {
 
@@ -23,18 +23,24 @@ class XportStream {
 	const CRYPT_OFF = 0x00;
 	const CRYPT_LSS = 0x01;
 
+	//this function requires an LSS environment
 	public static function receive($payload){
 		$stream = self::_get();
+		$stream->setCrypt(XportCrypt::_get(Config::get('crypt','key'),Config::get('crypt','iv')));
 		$stream->setup($payload);
 		return $stream;
 	}
 
 	public static function _get(){
-		return new self(Config::get('crypt','key'),Config::get('crypt','iv'));
+		return new self();
 	}
 
-	public function __construct($crypt_key,$crypt_iv){
-		$this->crypt = Crypt::_get($crypt_key,$crypt_iv);
+	public function __construct(){}
+
+	//set crypt handler
+	public function setCrypt($crypt){
+		$this->crypt = $crypt;
+		return $this;
 	}
 
 	public function setPayload($payload){
@@ -101,6 +107,8 @@ class XportStream {
 	}
 
 	protected function encrypt(){
+		if(!is_object($this->crypt))
+			throw new Exception('Crypt handler object not available');
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
 				$size = pack('N',$this->size);
@@ -115,6 +123,8 @@ class XportStream {
 	}
 
 	protected function decrypt(){
+		if(!is_object($this->crypt))
+			throw new Exception('Crypt handler object not available');
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
 				$this->payload = $this->crypt->decrypt($this->payload);
