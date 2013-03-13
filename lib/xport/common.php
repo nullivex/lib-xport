@@ -68,7 +68,7 @@ abstract class XportCommon {
 			case self::ENC_XML:
 				lib('array2xml');
 				try {
-					$response = array_shift(XML2Array::createArray($response));
+					$response = mda_shift(XML2Array::createArray($response));
 				} catch(Exception $e){
 					throw new Exception('Response is not valid XML: '.$response);
 				}
