@@ -84,7 +84,15 @@ class Xport extends XportCommon {
 		if(
 			   ($msg = mda_get($result,'error.msg')) != null 
 			&& ($code = mda_get($result,'error.code')) != null
-		) throw new Exception('[VC-SDK Exception] '.$msg,$code);
+		){
+			$obj = mda_get($result,'error.exception');
+			if(!is_null($obj)){
+				$e = unserialize(base64_decode($obj));
+				if(is_object($e))
+					throw $e;
+			}
+			throw new Exception($msg,$code);
+		}
 		return true;
 	}
 
@@ -164,7 +172,7 @@ class Xport extends XportCommon {
 		if(isset($response['data'])) $data = $response['data'];
 		if(isset($response['debug']) && trim($response['debug']) != '') debug_dump($response['debug']);
 		if(!isset($response['response']))
-			throw new Exception('No response received with request: '.$response);
+			throw new Exception('No response received with request: '.print_r($response,true));
 		$response = $response['response'];
 
 		//decode return payload
@@ -176,7 +184,7 @@ class Xport extends XportCommon {
 
 		//log response
 		if($encoding != self::ENC_RAW){
-			// $response = array_shift($response);
+			// $response = mda_shift($response);
 			$this->log->add('Response received: '.print_r($response,true));
 			//pass to error handler
 			$this->errorHandler($response);
