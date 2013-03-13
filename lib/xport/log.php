@@ -20,9 +20,9 @@ class XportLog {
 	}
 
 	public function __construct(){
-		if(!is_callable('makeHandle'))
-			throw new Exception('Cannot start XportLog requires sys/func package');
-		$this->sig = makeHandle();
+		if(!is_callable('gen_handle'))
+			throw new Exception('Cannot start XportLog requires func/gen package: gen_handle');
+		$this->sig = gen_handle();
 	}
 
 	//-----------------------------------------------------
