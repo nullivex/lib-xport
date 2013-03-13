@@ -134,9 +134,9 @@ class XportResponse extends XportCommon {
 	public function error(Exception $e){
 		$this->humanize();
 		$this->add('error',array(
-			 'msg'	=>	trim($e->getMessage())
-			,'code'	=>	$e->getCode()
-			,'trace'=>	base64_encode(serialize($e->getTrace()))
+			 'msg'			=>	trim($e->getMessage())
+			,'code'			=>	$e->getCode()
+			,'exception'	=>	base64_encode(serialize($e))
 		));
 		return $this;
 	}
