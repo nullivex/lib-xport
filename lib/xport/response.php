@@ -1,5 +1,5 @@
 <?php
-lib('xport_common','xport_stream','xport_log');
+lib('xport_common','xport_stream','xport_log','xport_auth');
 
 //This is the server response SDK
 //	Handles the request and sets up the context
@@ -21,13 +21,16 @@ class XportResponse extends XportCommon {
 	protected $request = null;
 	protected $request_data = null;
 
+	//env
+	protected $auth_handler = 'XportAuthStatic';
+
 	public static function _get(){
 		if(!self::$inst)
-			self::$inst = new self(post('request'),post('data'));
+			self::$inst = new static(post('request'),post('data'));
 		return self::$inst;
 	}
 
-	public function __construct($request,$data){
+	public function __construct($request=null,$data=null){
 		//start stream handler
 		$this->stream = XportStream::receive($request);
 		//store request
@@ -44,19 +47,17 @@ class XportResponse extends XportCommon {
 	public function process(){
 		$this->log->add('Request Received from: '.server('REMOTE_ADDR'));
 		$encoding = $this->decode($this->request);
-		// dolog('request: '.print_r($this->request,true));
 		if($encoding != self::ENC_RAW)
 			$this->log->add('Parsed Request: '.print_r($this->request,true));
 		return $this;
 	}
 
 	public function auth(){
-		if(is_null(Config::get('xport','auth_key')))
-			throw new Exception('Cannot auth request, no auth key defined');
-		if(!isset($this->request['xport_auth_key']))
-			throw new Exception('No auth key present for authenticated request');
-		if($this->request['xport_auth_key'] != Config::get('xport','auth_key'))
-			throw new Exception('Invalid auth key passed with request');
+		if(!is_callable(array($this->auth_handler,'auth')))
+			throw new Exception('Cannot authenticate request, auth handler doesnt support requests');
+		$rv = call_user_func($this->auth_handler.'::auth',$this->request);
+		if($rv !== true)
+			throw new Exception('Authentication failed, rejected');
 		return $this;
 	}
 
@@ -69,7 +70,8 @@ class XportResponse extends XportCommon {
 		if($key === false){
 			//remove api key from request
 			$request = $this->request;
-			unset($request['xport_auth_key']);
+			if(is_array($request) && isset($request['xport_auth_key']))
+				unset($request['xport_auth_key']);
 			//send back
 			return $request;
 		}
@@ -131,14 +133,15 @@ class XportResponse extends XportCommon {
 		return $this;
 	}
 
-	public function error(Exception $e){
-		$this->humanize();
-		$this->add('error',array(
+	public static function error(Exception $e){
+		$obj = new self();
+		$obj->humanize();
+		$obj->add('error',array(
 			 'msg'			=>	trim($e->getMessage())
 			,'code'			=>	$e->getCode()
 			,'exception'	=>	base64_encode(serialize($e))
 		));
-		return $this;
+		return $obj;
 	}
 
 	public function __toString(){
