@@ -24,9 +24,12 @@ class XportStream {
 	const CRYPT_LSS = 0x01;
 
 	//this function requires an LSS environment
-	public static function receive($payload){
+	public static function receive($payload,$crypt=null){
 		$stream = self::_get();
-		$stream->setCrypt(XportCrypt::_get(Config::get('crypt','key'),Config::get('crypt','iv')));
+		if(!is_object($crypt))
+			$stream->setCrypt(XportCrypt::_get(Config::get('crypt','key'),Config::get('crypt','iv')));
+		else
+			$stream->setCrypt($crypt);
 		$stream->setup($payload);
 		return $stream;
 	}
@@ -41,6 +44,11 @@ class XportStream {
 	public function setCrypt($crypt){
 		$this->crypt = $crypt;
 		return $this;
+	}
+
+	//get crypt handler
+	public function getCrypt(){
+		return $this->crypt;
 	}
 
 	public function setPayload($payload){
@@ -86,20 +94,16 @@ class XportStream {
 	protected function decompress(){
 		switch($this->compress){
 			case self::COMPRESS_GZIP:
-				dolog('using gzip');
 				$this->payload = gzinflate($this->payload);
 				break;
 			case self::COMPRESS_BZIP:
-				dolog('using bzip');
 				$this->payload = bzdecompress($this->payload);
 				break;
 			case self::COMPRESS_LZF:
-				dolog('using lzf');
 				$this->payload = lzf_decompress($this->payload);
 				break;
 			case self::COMPRESS_OFF:
 			default:
-				dolog('using none');
 				//anything but known values result in OFF
 				break;
 		}
