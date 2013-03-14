@@ -1,5 +1,5 @@
 <?php
-lib('xport_common','xport_log','xport_stream');
+lib('xport_common','xport_log','xport_stream','xport_auth');
 
 class Xport extends XportCommon {
 
@@ -10,6 +10,7 @@ class Xport extends XportCommon {
 	protected $http_scheme = 'http://';
 	protected $http_host = 'localhost';
 	protected $http_port = 8080;
+	protected $auth_handler = 'XportAuthStatic';
 
 	//resources
 	public $ch = null;
@@ -41,7 +42,7 @@ class Xport extends XportCommon {
 		$this->setHTTPPort($http_port);
 		$this->setHTTPScheme($http_scheme);
 		//setup logging
-		$this->log = XportLog::_get()->setLevel($log_level)->setLabel('VC-SDK');
+		$this->log = XportLog::_get()->setLevel($log_level);
 		//make sure the mda package exists
 		if(!is_callable('mda_get'))
 			throw new Exception('MDA package not loaded: required mda_get()');
@@ -127,10 +128,10 @@ class Xport extends XportCommon {
 	public function call($uri,$cmd=array(),&$data=null,$flags=array()){
 		$url = $this->makeURL($uri);
 
-		//inject auth key
-		if(is_null(Config::get('xport','auth_key')))
-			throw new Exception('Cannot make request, no auth key defined');
-		$cmd['xport_auth_key'] = Config::get('xport','auth_key');
+		//inject auth params
+		if(!is_callable(array($this->auth_handler,'requestParams')))
+			throw new Exception('Auth handler doesnt support requests');
+		$cmd = array_merge($cmd,call_user_func($this->auth_handler.'::requestParams'));
 
 		//print some info
 		$this->log->add('Setting up call to: '.$url);
@@ -176,7 +177,7 @@ class Xport extends XportCommon {
 		$response = $response['response'];
 
 		//decode return payload
-		$response = XportStream::receive($response)->decode();
+		$response = XportStream::receive($response,$this->stream->getCrypt())->decode();
 		$this->log->add('Response Raw ('.strlen($response).'): '.substr($response,0,50).'...',XportLog::DEBUG);
 
 		//decode the response
