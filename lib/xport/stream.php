@@ -128,7 +128,7 @@ class XportStream {
 		switch($this->encrypt){
 			case self::CRYPT_LSS:
 				$this->payload = $this->crypt->decrypt($this->payload);
-				$this->size = mda_shift(unpack('N',substr($this->payload,0,4)));
+				$this->size = array_shift(unpack('N',substr($this->payload,0,4)));
 				$this->payload = substr($this->payload,4,$this->size);
 				break;
 			case self::CRYPT_OFF:
