@@ -184,7 +184,7 @@ class Xport extends XportCommon {
 
 		//log response
 		if($encoding != self::ENC_RAW){
-			// $response = mda_shift($response);
+			// $response = array_shift($response);
 			$this->log->add('Response received: '.print_r($response,true));
 			//pass to error handler
 			$this->errorHandler($response);
