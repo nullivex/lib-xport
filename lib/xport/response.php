@@ -38,7 +38,7 @@ class XportResponse extends XportCommon {
 		//store data
 		$this->request_data = $data;
 		//start logging
-		$this->log = XportLog::_get()->setLevel(XportLog::INFO)->setLabel('Xport-Resp');
+		$this->log = XportLog::_get()->setLevel(XportLog::DEBUG)->setLabel('Xport-Resp');
 	}
 
 	//-----------------------------------------------------
