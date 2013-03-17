@@ -9,7 +9,7 @@ class Xport extends XportCommon {
 	//env
 	protected $http_scheme = 'http://';
 	protected $http_host = 'localhost';
-	protected $http_port = 8080;
+	protected $http_port = 80;
 	protected $auth_handler = 'XportAuthStatic';
 
 	//resources
@@ -29,7 +29,7 @@ class Xport extends XportCommon {
 	//the real constructor
 	protected function init(
 		 $http_host='localhost'
-		,$http_port=8080
+		,$http_port=80
 		,$http_scheme='http://'
 		,$log_level=XportLog::INFO
 	){
@@ -186,7 +186,7 @@ class Xport extends XportCommon {
 		//log response
 		if($encoding != self::ENC_RAW){
 			// $response = array_shift($response);
-			$this->log->add('Response received: '.print_r($response,true));
+			$this->log->add('Response received: '.print_r($response,true),XportLog::DEBUG);
 			//pass to error handler
 			$this->errorHandler($response);
 		}
