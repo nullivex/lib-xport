@@ -30,7 +30,7 @@ class XportLog {
 	//-----------------------------------------------------
 	public function setCallback($callback){
 		if(!is_callable($callback))
-			throw new Excpetion('Invalid callback passed for logging: '.$callback);
+			throw new Exception('Invalid callback passed for logging: '.$callback);
 		$this->callback = $callback;
 		return $this;
 	}
