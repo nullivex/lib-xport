@@ -9,5 +9,5 @@ interface XportCryptInterface {
 }
 
 //we use the LSS crypt class as is
-lib('crypt');
+ld('crypt');
 class XportCrypt extends Crypt implements XportCryptInterface{}
