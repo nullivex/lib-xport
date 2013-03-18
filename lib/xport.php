@@ -1,5 +1,5 @@
 <?php
-lib('xport_common','xport_log','xport_stream','xport_auth');
+ld('xport_common','xport_log','xport_stream','xport_auth');
 
 class Xport extends XportCommon {
 
