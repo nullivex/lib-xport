@@ -1,5 +1,5 @@
 <?php
-lib('xport_common','xport_stream','xport_log','xport_auth');
+ld('xport_common','xport_stream','xport_log','xport_auth');
 
 //This is the server response SDK
 //	Handles the request and sets up the context
