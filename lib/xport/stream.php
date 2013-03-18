@@ -1,5 +1,5 @@
 <?php
-lib('xport_crypt');
+ld('xport_crypt');
 
 class XportStream {
 
