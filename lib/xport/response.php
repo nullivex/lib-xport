@@ -145,7 +145,11 @@ class XportResponse extends XportCommon {
 	}
 
 	public function __toString(){
-		return $this->output();
+		try {
+			return $this->output();
+		} catch(Exception $e){
+			return (string) $e;
+		}
 	}
 
 }
