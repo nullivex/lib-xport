@@ -1,4 +1,5 @@
 <?php
+ld('/func/log');
 
 class XportLog {
 
