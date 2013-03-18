@@ -1,4 +1,5 @@
 <?php
+ld('/func/gen','/func/mda');
 
 abstract class XportCommon {
 
