@@ -38,7 +38,7 @@ abstract class XportCommon {
 				$cmd = serialize($cmd);
 				break;
 			case self::ENC_XML:
-				lib('array2xml');
+				ld('array2xml');
 				try {
 					$cmd = Array2XML::createXML($root,$cmd)->saveXML();
 				} catch(Exception $e){
@@ -66,7 +66,7 @@ abstract class XportCommon {
 				$response = unserialize($response);
 				break;
 			case self::ENC_XML:
-				lib('array2xml');
+				ld('array2xml');
 				try {
 					$response = array_shift(XML2Array::createArray($response));
 				} catch(Exception $e){
