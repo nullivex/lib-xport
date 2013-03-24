@@ -27,7 +27,7 @@
 	]
 	,"require": {
 		 "php":						">=5.3.2"
-		,"lib-curl"					"*"
+		,"lib-curl":				"*"
 		,"openlss/core-boot":		">=0.0.1"
 		,"openlss/func-gen":		">=0.0.1"
 		,"Openlss/func-log":		">=0.0.1"
