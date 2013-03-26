@@ -20,6 +20,7 @@
  */
 namespace LSS\Xport;
 
+use \Exception;
 use \LSS\Array2XML;
 use \LSS\XML2Array;
 
@@ -61,7 +62,6 @@ abstract class Common {
 				$cmd = serialize($cmd);
 				break;
 			case self::ENC_XML:
-				ld('array2xml');
 				try {
 					$cmd = Array2XML::createXML($root,$cmd)->saveXML();
 				} catch(Exception $e){
@@ -89,7 +89,6 @@ abstract class Common {
 				$response = unserialize($response);
 				break;
 			case self::ENC_XML:
-				ld('array2xml');
 				try {
 					$response = array_shift(XML2Array::createArray($response));
 				} catch(Exception $e){

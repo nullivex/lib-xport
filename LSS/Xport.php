@@ -20,6 +20,7 @@
  */
 namespace LSS;
 
+use \Exception;
 use \LSS\Xport\Common;
 use \LSS\Xport\Log;
 use \LSS\Xport\Stream;

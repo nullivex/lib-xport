@@ -19,6 +19,8 @@
  *	If not, see <http://www.gnu.org/licenses/>.
  */
 namespace LSS\Xport;
+
+use \Exception;
 use \LSS\Config;
 
 class Stream {

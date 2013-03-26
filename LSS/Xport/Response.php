@@ -20,6 +20,8 @@
  */
 namespace LSS\Xport;
 
+use \Exception;
+
 //This is the server response SDK
 //	Handles the request and sets up the context
 //	Used to properly respond to the client SDK

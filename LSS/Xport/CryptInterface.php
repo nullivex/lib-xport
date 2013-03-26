@@ -18,7 +18,7 @@
  *	GNU Lesser General Public License along with OpenLSS.
  *	If not, see <http://www.gnu.org/licenses/>.
  */
-namespace LSS/Xport;
+namespace LSS\Xport;
 
 interface CryptInterface {
 

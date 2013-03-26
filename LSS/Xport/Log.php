@@ -20,7 +20,9 @@
  */
 namespace LSS\Xport;
 
-class XportLog {
+use \Exception;
+
+class Log {
 
 	//env
 	protected $level	=	false;
