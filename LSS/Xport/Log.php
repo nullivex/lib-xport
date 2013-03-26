@@ -18,8 +18,7 @@
  *	GNU Lesser General Public License along with OpenLSS.
  *	If not, see <http://www.gnu.org/licenses/>.
  */
-namespace LSS;
-ld('/func/log');
+namespace LSS\Xport;
 
 class XportLog {
 

@@ -18,16 +18,7 @@
  *	GNU Lesser General Public License along with OpenLSS.
  *	If not, see <http://www.gnu.org/licenses/>.
  */
-namespace LSS;
+namespace LSS\Xport;
 
-interface XportCryptInterface {
+class Crypt extends \LSS\Crypt implements CryptInterface{}
 
-	public function verify();
-	public function encrypt($data,$base64_encode=true);
-	public function decrypt($data,$base64_decode=true);
-
-}
-
-//we use the LSS crypt class as is
-ld('crypt');
-class XportCrypt extends Crypt implements XportCryptInterface{}

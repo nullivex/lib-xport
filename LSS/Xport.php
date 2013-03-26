@@ -19,9 +19,13 @@
  *	If not, see <http://www.gnu.org/licenses/>.
  */
 namespace LSS;
-ld('xport_common','xport_log','xport_stream','xport_auth');
 
-class Xport extends XportCommon {
+use \LSS\Xport\Common;
+use \LSS\Xport\Log;
+use \LSS\Xport\Stream;
+use \LSS\Xport\AuthStatic;
+
+class Xport extends Common {
 
 	//call flags
 	const CALL_NOEXEC = 1;
@@ -30,7 +34,7 @@ class Xport extends XportCommon {
 	protected $http_scheme = 'http://';
 	protected $http_host = 'localhost';
 	protected $http_port = 80;
-	protected $auth_handler = 'XportAuthStatic';
+	protected $auth_handler = '\LSS\Xport\AuthStatic';
 
 	//resources
 	public $ch = null;
@@ -51,18 +55,18 @@ class Xport extends XportCommon {
 		 $http_host='localhost'
 		,$http_port=80
 		,$http_scheme='http://'
-		,$log_level=XportLog::INFO
+		,$log_level=Log::INFO
 	){
 		//setup stream handler
-		$this->stream = XportStream::_get();
-		$this->stream->setCompression(XportStream::COMPRESS_GZIP);
-		$this->stream->setEncryption(XportStream::CRYPT_LSS);
+		$this->stream = Stream::_get();
+		$this->stream->setCompression(Stream::COMPRESS_GZIP);
+		$this->stream->setEncryption(Stream::CRYPT_LSS);
 		//set environment
 		$this->setHTTPHost($http_host);
 		$this->setHTTPPort($http_port);
 		$this->setHTTPScheme($http_scheme);
 		//setup logging
-		$this->log = XportLog::_get()->setLevel($log_level);
+		$this->log = Log::_get()->setLevel($log_level);
 		//make sure the mda package exists
 		if(!is_callable('mda_get'))
 			throw new Exception('MDA package not loaded: required mda_get()');
@@ -156,13 +160,13 @@ class Xport extends XportCommon {
 		//print some info
 		$this->log->add('Setting up call to: '.$url);
 		$this->log->add('Command Params: '.print_r($cmd,true));
-		$this->log->add('Flags Present: '.print_r($flags,true),XportLog::DEBUG);
+		$this->log->add('Flags Present: '.print_r($flags,true),Log::DEBUG);
 		if(!is_null($data))
-			$this->log->add('Data present ('.strlen($data).'): '.substr($data,0,50).'...',XportLog::DEBUG);
+			$this->log->add('Data present ('.strlen($data).'): '.substr($data,0,50).'...',Log::DEBUG);
 
 		//encode cmd params
 		$request = $this->encode($cmd);
-		$this->log->add('Request Encoded: '.$request,XportLog::DEBUG);
+		$this->log->add('Request Encoded: '.$request,Log::DEBUG);
 
 		//start curl if needed
 		if(!$this->ch) $this->initCURL();
@@ -197,8 +201,8 @@ class Xport extends XportCommon {
 		$response = $response['response'];
 
 		//decode return payload
-		$response = XportStream::receive($response,$this->stream->getCrypt())->decode();
-		$this->log->add('Response Raw ('.strlen($response).'): '.substr($response,0,50).'...',XportLog::DEBUG);
+		$response = Stream::receive($response,$this->stream->getCrypt())->decode();
+		$this->log->add('Response Raw ('.strlen($response).'): '.substr($response,0,50).'...',Log::DEBUG);
 
 		//decode the response
 		$encoding = $this->decode($response);
@@ -206,7 +210,7 @@ class Xport extends XportCommon {
 		//log response
 		if($encoding != self::ENC_RAW){
 			// $response = array_shift($response);
-			$this->log->add('Response received: '.print_r($response,true),XportLog::DEBUG);
+			$this->log->add('Response received: '.print_r($response,true),Log::DEBUG);
 			//pass to error handler
 			$this->errorHandler($response);
 		}

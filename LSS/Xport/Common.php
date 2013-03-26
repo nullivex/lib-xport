@@ -18,11 +18,12 @@
  *	GNU Lesser General Public License along with OpenLSS.
  *	If not, see <http://www.gnu.org/licenses/>.
  */
-namespace LSS;
+namespace LSS\Xport;
 
-ld('/func/gen','/func/mda');
+use \LSS\Array2XML;
+use \LSS\XML2Array;
 
-abstract class XportCommon {
+abstract class Common {
 
 	//encoders
 	const ENC_RAW = 0x00;
@@ -35,9 +36,9 @@ abstract class XportCommon {
 	//This basically turns the output into something human readable
 	//	good for debugging, bad for security, size, flexibility
 	public function humanize(){
-		$this->stream->setCompression(XportStream::COMPRESS_OFF);
-		$this->stream->setEncryption(XportStream::CRYPT_OFF);
-		$this->setEncoding(XportCommon::ENC_XML);
+		$this->stream->setCompression(Stream::COMPRESS_OFF);
+		$this->stream->setEncryption(Stream::CRYPT_OFF);
+		$this->setEncoding(Common::ENC_XML);
 		return $this;
 	}
 

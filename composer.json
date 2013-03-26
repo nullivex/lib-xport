@@ -36,4 +36,20 @@
 		,"openlss/lib-crypt":		">=0.0.1"
 		,"openlss/lib-url":			">=0.0.1"
 	}
+	,"require-dev": {
+		 "openlss/core-boot":		"dev-master"
+		,"openlss/func-gen":		"dev-master"
+		,"Openlss/func-log":		"dev-master"
+		,"openlss/func-mda":		"dev-master"
+		,"openlss/lib-config":		"dev-master"
+		,"openlss/lib-crypt":		"dev-master"
+		,"openlss/lib-url":			"dev-master"
+	}
+	,"autoload": {
+		"psr-0": {
+			 "LSS":			""
+			,"LSS\\Xport":	"LSS/Xport/"
+		}
+	}
+
 }

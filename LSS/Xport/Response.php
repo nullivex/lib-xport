@@ -18,13 +18,12 @@
  *	GNU Lesser General Public License along with OpenLSS.
  *	If not, see <http://www.gnu.org/licenses/>.
  */
-namespace LSS;
-ld('xport_common','xport_stream','xport_log','xport_auth');
+namespace LSS\Xport;
 
 //This is the server response SDK
 //	Handles the request and sets up the context
 //	Used to properly respond to the client SDK
-class XportResponse extends XportCommon {
+class Response extends Common {
 
 	//yes this is a singleton by design
 	static $inst = false;
@@ -42,7 +41,7 @@ class XportResponse extends XportCommon {
 	protected $request_data = null;
 
 	//env
-	protected $auth_handler = 'XportAuthStatic';
+	protected $auth_handler = '\LSS\Xport\AuthStatic';
 
 	public static function _get(){
 		if(!self::$inst)
@@ -52,13 +51,13 @@ class XportResponse extends XportCommon {
 
 	public function __construct($request=null,$data=null){
 		//start stream handler
-		$this->stream = XportStream::receive($request);
+		$this->stream = Stream::receive($request);
 		//store request
 		$this->request = $this->stream->decode();
 		//store data
 		$this->request_data = $data;
 		//start logging
-		$this->log = XportLog::_get()->setLevel(XportLog::DEBUG)->setLabel('Xport-Resp');
+		$this->log = Log::_get()->setLevel(Log::DEBUG)->setLabel('Xport-Resp');
 	}
 
 	//-----------------------------------------------------

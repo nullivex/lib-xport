@@ -18,10 +18,10 @@
  *	GNU Lesser General Public License along with OpenLSS.
  *	If not, see <http://www.gnu.org/licenses/>.
  */
-namespace LSS;
-ld('xport_crypt');
+namespace LSS\Xport;
+use \LSS\Config;
 
-class XportStream {
+class Stream {
 
 	//resources
 	protected $crypt = null;
@@ -47,7 +47,7 @@ class XportStream {
 	public static function receive($payload,$crypt=null){
 		$stream = self::_get();
 		if(!is_object($crypt))
-			$stream->setCrypt(XportCrypt::_get(Config::get('crypt','key'),Config::get('crypt','iv')));
+			$stream->setCrypt(Crypt::_get(Config::get('crypt','key'),Config::get('crypt','iv')));
 		else
 			$stream->setCrypt($crypt);
 		$stream->setup($payload);
@@ -196,3 +196,4 @@ class XportStream {
 	}
 
 }
+

@@ -18,16 +18,10 @@
  *	GNU Lesser General Public License along with OpenLSS.
  *	If not, see <http://www.gnu.org/licenses/>.
  */
-namespace LSS;
+namespace LSS\Xport;
+use \LSS\Config;
 
-interface XportAuthInterface {
-
-	public static function requestParams();
-	public static function auth($params);
-
-}
-
-abstract class XportAuthStatic implements XportAuthInterface {
+abstract class AuthStatic implements AuthInterface {
 
 	public static function requestParams(){
 		if(is_null(Config::get('xport','auth_key')))
