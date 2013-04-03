@@ -28,13 +28,14 @@
 	,"require": {
 		 "php":						">=5.3.2"
 		,"lib-curl":				"*"
-		,"openlss/core-boot":		">=0.0.1"
-		,"openlss/func-gen":		">=0.0.1"
-		,"Openlss/func-log":		">=0.0.1"
-		,"openlss/func-mda":		">=0.0.1"
-		,"openlss/lib-config":		">=0.0.1"
-		,"openlss/lib-crypt":		">=0.0.1"
-		,"openlss/lib-url":			">=0.0.1"
+		,"openlss/core-boot":		"0.0.*"
+		,"openlss/func-gen":		"0.0.*"
+		,"Openlss/func-log":		"0.0.*"
+		,"openlss/func-mda":		"0.0.*"
+		,"openlss/lib-config":		"0.0.*"
+		,"openlss/lib-crypt":		"0.0.*"
+		,"openlss/lib-url":			"0.0.*"
+		,"openlss/lib-validate":	"0.0.*"
 	}
 	,"require-dev": {
 		 "openlss/core-boot":		"dev-master"
@@ -44,6 +45,7 @@
 		,"openlss/lib-config":		"dev-master"
 		,"openlss/lib-crypt":		"dev-master"
 		,"openlss/lib-url":			"dev-master"
+		,"openlss/lib-validate":	"dev-master"
 	}
 	,"autoload": {
 		"psr-0": {
