@@ -24,14 +24,8 @@ use Exception;
 use \LSS\Config;
 use \LSS\Xport\Crypt;
 use \LSS\Xport\Stream;
-use \LSS\Xport;
 
-abstract class Client extends Xport {
-
-	const FILE_IO_READ				=	'read';
-	const FILE_IO_WRITE				=	'write';
-	const FILE_IO_RCOPY				=	'rcopy';
-	const FILE_IO_STORE				=	'store';
+abstract class Client extends Common {
 
 	protected	$path				=	null;
 	protected	$mode				=	null;
@@ -265,74 +259,6 @@ abstract class Client extends Xport {
 			$this->sync();
 		}
 		return array('bytes_written'=>strlen($data));
-	}
-
-	//-----------------------------------------------------
-	//Buffer Functionality
-	//	for internal buffering (readahead, write coalescing)
-	//-----------------------------------------------------
-	protected $buffer_max			=	1048576;
-	protected $buffer_ptr			=	-1;
-	protected $buffer				=	'';
-
-	protected function getBuffer(){
-		return $this->buffer;
-	}
-
-	public function getBufferLimit(){
-		return $this->buffer_max;
-	}
-
-	public function getBufferSize(){
-		return strlen($this->buffer);
-	}
-
-	protected function getBufferSlice($offset,$length){
-		return substr($this->buffer,$offset - $this->buffer_ptr,$length);
-	}
-
-	public function padBuffer($offset,$data){
-		$pad_length = ($this->buffer_ptr + $this->getBufferSize()) - $offset;
-		$this->buffer = str_pad($data,$pad_length,chr(0),STR_PAD_LEFT);
-		return $this;
-	}
-
-	public function pokeBuffer($offset,$data){
-		$buffer_size = $this->getBufferSize();
-		//if we can't poke this data at the offset (outside of buffer window) return false
-		if(
-			($offset < $this->buffer_ptr)
-			||
-			($buffer_size + strlen($data) > $this->buffer_max)
-		){
-			return false;
-		}
-		if($this->getBufferSize() === 0){
-			$this->setBuffer($offset,$data);
-			return true;
-		}
-		if($offset = $this->buffer_ptr + $buffer_size){
-			$this->buffer .= $data;
-			return true;
-		}
-		if($offset > $this->buffer_ptr + $buffer_size){
-			$this->padBuffer($offset,$data);
-			return true;
-		}
-		return false;
-	}
-
-	public function setBuffer($offset,$data){
-		$this->buffer_ptr = $offset;
-		$this->buffer = $data;
-		return $this;
-	}
-
-	public function setBufferLimit($limit){
-		if(!is_numeric($limit) || $limit < 1)
-			throw new Exception('Invalid buffer limit, must be integer greater than 0: '.$limit);
-		$this->buffer_max = $limit;
-		return $this;
 	}
 
 }

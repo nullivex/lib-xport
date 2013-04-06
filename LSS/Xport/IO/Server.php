@@ -24,7 +24,7 @@ use \Exception;
 use \LSS\Validate;
 use \LSS\Xport\Stream;
 
-abstract class Server {
+abstract class Server extends Common {
 
 	const RCOPY_BLOCK_SIZE = 1048576;
 
@@ -146,7 +146,7 @@ abstract class Server {
 
 		switch($xp->get('action')){
 
-			case Client::FILE_IO_READ:
+			case static::FILE_IO_READ:
 				//validate request
 				Validate::prime($xp->get());
 				Validate::go('path')->not('blank');
@@ -165,7 +165,7 @@ abstract class Server {
 				return $xp->addResponseData($stream->encode());
 				break;
 
-			case Client::FILE_IO_WRITE:
+			case static::FILE_IO_WRITE:
 				//validate request
 				Validate::prime($xp->get());
 				Validate::go('path')->not('blank');
@@ -189,7 +189,7 @@ abstract class Server {
 				return $xp->add('bytes_written',$bytes_written);
 				break;
 
-			case Client::FILE_IO_RCOPY:
+			case static::FILE_IO_RCOPY:
 				//validate request
 				Validate::prime($xp->get());
 				Validate::go('path')->not('blank');
@@ -215,7 +215,7 @@ abstract class Server {
 				return $xp->add('bytes_written',$bytes_written);
 				break;
 
-			case Client::FILE_IO_STORE:
+			case static::FILE_IO_STORE:
 				//validate request
 				Validate::prime($xp->get());
 				Validate::go('path')->not('blank');
