@@ -42,6 +42,7 @@
 			 "LSS":			""
 			,"LSS\\Xport":	"LSS/Xport/"
 		}
+		,"files":	["src/config.php"]
 	}
 
 }
