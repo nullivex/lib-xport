@@ -49,7 +49,7 @@ class Stream {
 	public static function receive($payload,$crypt=null){
 		$stream = self::_get();
 		if(!is_object($crypt))
-			$stream->setCrypt(Crypt::_get(Config::get('xport.crypt.key'),Config::get('xport.crypt.iv')));
+			$stream->setCrypt(Crypt::_get(Config::get('xport','crypt.key'),Config::get('xport','crypt.iv')));
 		else
 			$stream->setCrypt($crypt);
 		$stream->setup($payload);
