@@ -85,7 +85,7 @@ class Xport extends Common {
 	}
 
 	public function setHTTPPort($http_port){
-		if(!is_string($http_port))
+		if(!is_string($http_port) && !is_int($http_port))
 			throw new Exception('Cannot set HTTP port as it is not a string');
 		$this->http_port = intval($http_port);
 		return $this;
