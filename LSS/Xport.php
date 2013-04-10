@@ -78,16 +78,22 @@ class Xport extends Common {
 	//Environment Setters
 	//-----------------------------------------------------
 	public function setHTTPHost($http_host){
+		if(!is_string($http_host))
+			throw new Exception('Cannot set HTTP host as it is not string');
 		$this->http_host = $http_host;
 		return $this;
 	}
 
 	public function setHTTPPort($http_port){
-		$this->http_port = $http_port;
+		if(!is_string($http_port))
+			throw new Exception('Cannot set HTTP port as it is not a string');
+		$this->http_port = intval($http_port);
 		return $this;
 	}
 
 	public function setHTTPScheme($http_scheme){
+		if(!is_string($http_scheme))
+			throw new Exception('Cannot set HTTP scheme as it is not string');
 		$this->http_scheme = $http_scheme;
 		return $this;
 	}
@@ -115,7 +121,7 @@ class Xport extends Common {
 			if(!is_null($obj)){
 				$e = unserialize(base64_decode($obj));
 				if(is_object($e))
-					throw $e;
+					throw new Exception($e);
 			}
 			throw new Exception($msg,$code);
 		}
