@@ -136,12 +136,12 @@ abstract class Server extends Common {
 	//-----------------------------------------------------
 	//Processes a Request from Xport\IO\Client
 	//-----------------------------------------------------
-	public static function process($xp){
+	public static function process($xp,$crypt=null){
 		Validate::prime($xp->get());
 		Validate::go('action')->not('blank')->is('al');
 		Validate::paint();
 
-		$stream = Stream::receive($xp->getRequestData());
+		$stream = Stream::receive($xp->getRequestData(),$crypt);
 		$fileio = static::_get();
 
 		switch($xp->get('action')){
