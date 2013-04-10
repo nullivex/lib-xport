@@ -143,7 +143,7 @@ abstract class Client extends Common {
 		}
 	}
 
-	public function read($offset=0,$length=null){
+	public function read($offset=0,$length=null,$crypt=null){
 		if(strpos($this->getMode(),'w') === 0 || strpos($this->getMode(),'a') === 0)
 			throw new Exception('Reading not supported in write/append only mode');
 		//set read length if null
@@ -179,7 +179,7 @@ abstract class Client extends Common {
 				)
 				,$data
 			);
-			$rv = Stream::receive($data)->decode();
+			$rv = Stream::receive($data,$crypt)->decode();
 			//first 40 bytes is the sha1
 			$sha1 = substr($rv,0,40);
 			//next 32 bytes is the md5
