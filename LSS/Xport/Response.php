@@ -149,8 +149,8 @@ class Response extends Common {
 	}
 
 	//this is a shortcut to send success to the other end
-	public function success(){
-		$this->add('success',array('msg'=>'Request processed successfully','code'=>0));
+	public function success($overrides=array()){
+		$this->add('success',array_merge(array('msg'=>'Request processed successfully','code'=>0),$overrides));
 		return $this;
 	}
 
