@@ -121,7 +121,7 @@ class Xport extends Common {
 			if(!is_null($obj)){
 				$e = unserialize(base64_decode($obj));
 				if(is_object($e))
-					throw new Exception($e,$e->getCode());
+					throw new Exception($e,intval($e->getMessage()));
 			}
 			throw new Exception($msg,$code);
 		}
