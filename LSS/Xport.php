@@ -120,8 +120,10 @@ class Xport extends Common {
 			$obj = mda_get($result,'error.exception');
 			if(!is_null($obj)){
 				$e = unserialize(base64_decode($obj));
-				if(is_object($e))
-					throw new Exception($e,intval($e->getMessage()));
+				if(is_object($e)){
+					$class = get_class($e);
+					throw new $class($e,$e->getCode());
+				}
 			}
 			throw new Exception($msg,$code);
 		}
