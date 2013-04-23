@@ -31,11 +31,17 @@ class Xport extends Common {
 	//call flags
 	const CALL_NOEXEC = 1;
 
+	//exception handling
+	const EXCEPT_NORMAL = 0;
+	const EXCEPT_EXTRA = 1;
+	const EXCEPT_FULL = 2;
+
 	//env
 	protected $http_scheme = 'http://';
 	protected $http_host = 'localhost';
 	protected $http_port = 80;
 	protected $auth_handler = '\LSS\Xport\AuthStatic';
+	protected $except_mode = self::EXCEPT_NORMAL;
 
 	//resources
 	public $ch = null;
@@ -98,6 +104,20 @@ class Xport extends Common {
 		return $this;
 	}
 
+	public function setExceptMode($mode){
+		switch($mode){
+			case self::EXCEPT_NORMAL:
+			case self::EXCEPT_EXTRA:
+			case self::EXCEPT_FULL:
+				$this->except_mode = $mode;
+				break;
+			default:
+				throw new Exception('Invalid exception mode passed');
+				break;
+		}
+		return true;
+	}
+
 	//-----------------------------------------------------
 	//Environment Getters
 	//-----------------------------------------------------
@@ -107,6 +127,10 @@ class Xport extends Common {
 
 	public function getHTTPPort(){
 		return $this->http_port;
+	}
+
+	public function getExceptMode(){
+		return $this->except_mode;
 	}
 
 	//-----------------------------------------------------
@@ -121,8 +145,17 @@ class Xport extends Common {
 			if(!is_null($obj)){
 				$e = unserialize(base64_decode($obj));
 				if(is_object($e)){
-					$class = get_class($e);
-					throw new $class($e,$e->getCode());
+					switch($this->getExceptMode()){
+						case self::EXCEPT_EXTRA:
+						case self::EXCEPT_FULL:
+							$class = get_class($e);
+							throw new $class($e,$e->getCode());
+							break;
+						case self::EXCEPT_NORMAL:
+						default:
+							throw $e;
+							break;
+					}
 				}
 			}
 			throw new Exception($msg,$code);
