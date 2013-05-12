@@ -183,7 +183,7 @@ abstract class Server extends Common {
 				//Setup and write
 				$fileio->setPath($xp->get('path'));
 				$fileio->setOffset($xp->get('offset'));
-				if(!($bytes_written = $fileio->write($data)))
+				if(($bytes_written = $fileio->write($data)) === false)
 					throw new Exception('Failed to write block');
 				//pass success
 				return $xp->add('bytes_written',$bytes_written);
