@@ -59,7 +59,7 @@ class Response extends Common {
 		//store data
 		$this->request_data = $data;
 		//start logging
-		$this->log = Log::_get()->setLevel(Log::DEBUG)->setLabel('Xport-Resp');
+		$this->log = Log::_get()->setLevel(Log::WARN)->setLabel('Xport-Resp');
 	}
 
 	//-----------------------------------------------------
