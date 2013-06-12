@@ -243,7 +243,7 @@ abstract class Client extends Common {
 		if(isset($rv['bytes_written']) && $rv['bytes_written'] == $size)
 			$this->setBuffer(-1,'');
 		else
-			throw new Exception('Failed to clear buffer, invalid write response: '.print_r($rv,true));
+			throw new Exception('Failed to clear buffer, invalid write response (uri: '.$this->getHTTPHost().$url.') (expected written '.$size.'): '.print_r($rv,true));
 		return $rv;
 	}
 
