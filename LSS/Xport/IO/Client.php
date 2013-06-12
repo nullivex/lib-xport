@@ -234,7 +234,7 @@ abstract class Client extends Common {
 			,array(
 				 'action'		=>	self::FILE_IO_WRITE
 				,'path'			=>	$this->getPath()
-				,'offset'		=>	$this->buffer_ptr
+				,'offset'		=>	($this->buffer_ptr > 0 ? $this->buffer_ptr : 0)
 				,'size'			=>	$size
 			)
 			,$data //add data

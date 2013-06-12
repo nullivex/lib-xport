@@ -192,6 +192,8 @@ class Xport extends Common {
 	//Transport Layer
 	//-----------------------------------------------------
 	public function call($uri,$cmd=array(),&$data=null,$flags=array()){
+		$call_start = microtime(true);
+
 		$url = $this->makeURL($uri);
 
 		//inject auth params
@@ -256,6 +258,8 @@ class Xport extends Common {
 			//pass to error handler
 			$this->errorHandler($response);
 		}
+
+		$this->log->add('Request took '.number_format(microtime(true)-$call_start,5).' seconds',Log::DEBUG);
 
 		//if we got here there were no errors
 		return $response;

@@ -63,6 +63,7 @@ class Log {
 			$this->level = $level;
 		} else {
 			//set level otherwise
+			$level = (int)$level;
 			if(!is_int($level) || $level < 0)
 				throw new Exception('Logging level must be int greater than or equal to 0');
 			$this->level = $level;
