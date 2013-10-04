@@ -231,10 +231,42 @@ class Xport extends Common {
 		//if noexec is passed we simple pass the prepared curl handle back
 		if(in_array(self::CALL_NOEXEC,$flags)) return $this->ch;
 
-		//execute the call
-		$result = curl_exec($this->ch);
-		if($result === false)
-			throw new Exception('Call failed to '.$url.' '.curl_error($this->ch));
+		//try the actual call
+		$tries = 1;
+		//TODO: tunables that need to be in the config
+		$max_tries = 10;
+		//the retry sleep gets multiplied by the number of tries
+		//	thus the first call waits X ms and the last call waits X * $max_tries ms
+		$retry_sleep = 300; //in ms
+		//anything not defined here will trickle down and throw an exception
+		$http_status_retry = array(5);
+		$http_status_complete = array(2,3);
+		do {
+			//execute the call
+			$result = curl_exec($this->ch);
+			if($result === false)
+				throw new Exception('Call failed to '.$url.' '.curl_error($this->ch));
+
+			//check the response status
+			$http_status = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+			$http_status_class = floor($http_status/100);
+			if(in_array($http_status_class,$http_status_retry)){
+				$sleep_time = $retry_sleep * $tries;
+				$this->log->add(
+					 "Request failed with response code: "
+					.$http_status." retrying ".($max_tries - $tries)
+					." more times waiting ".$sleep_time
+					."ms until next try",Log::WARN
+				);
+				usleep($sleep_time * 1000);
+				continue;
+			}
+			if(in_array($http_status_class,$http_status_complete)){
+				//exit the loop on success and continue
+				break;
+			}
+			throw new Exception("Unrecognized HTTP RESPONSE CODE: ".$http_status);
+		} while(++$tries < $max_tries);
 
 		//separate channels
 		parse_str($result,$response); unset($result);
