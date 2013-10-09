@@ -222,10 +222,11 @@ class Xport extends Common {
 		$this->stream->setPayload($request);
 
 		//setup curl post
+		$post_query = http_build_query(array('request'=>$this->stream->encode(),'data'=>$data));
 		curl_setopt(
 			 $this->ch
 			,CURLOPT_POSTFIELDS
-			,http_build_query(array('request'=>$this->stream->encode(),'data'=>$data))
+			,$post_query
 		);
 
 		//if noexec is passed we simple pass the prepared curl handle back
@@ -255,8 +256,10 @@ class Xport extends Common {
 				$this->log->add(
 					 "Request failed with response code: "
 					.$http_status." retrying ".($max_tries - $tries)
-					." more times waiting ".$sleep_time
-					."ms until next try",Log::WARN
+					." more times waiting ".$sleep_time."ms"
+					." until next try"
+					." req(".$url.")"
+					,Log::WARN
 				);
 				usleep($sleep_time * 1000);
 				continue;
